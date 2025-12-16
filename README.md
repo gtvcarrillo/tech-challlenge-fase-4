@@ -100,7 +100,8 @@ O notebook exporta uma tabela final (CSV) contendo **apenas a previsão calibrad
 Para horizontes longos (meses/anos), uma previsão multi-step determinística com LSTM tende a acumular erro e divergir.  
 Por isso, foi incluída uma projeção até **31/12/2026** baseada em **cenários de log-retornos** (pessimista/mediana/otimista) usando drift (μ) e volatilidade (σ) estimados do histórico.
 
-![Projeção até 2026 (cenários)](./images/projecao_cenarios_2026.png)
+<img width="828" height="347" alt="image" src="https://github.com/user-attachments/assets/2579690c-95fc-4ae0-bcb3-29b5d2aaa3c6" />
+
 
 Export gerado:
 - `projecao_itub4_cenarios_ate_2026.csv`
