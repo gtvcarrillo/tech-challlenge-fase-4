@@ -55,30 +55,36 @@ O modelo utiliza LSTM para capturar padrões temporais na série, com camada(s) 
 Além das métricas **RAW** (previsão direta), é aplicada uma **calibração por BIAS** para corrigir um erro sistemático.
 
 ### Como o BIAS é calculado
-O BIAS é a média do erro na validação:
-\[
-BIAS = \frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)
-\]
-A previsão calibrada é:
-\[
-\hat{y}^{cal}_i = \hat{y}_i + BIAS
-\]
+
+O **BIAS** é um *offset* (correção aditiva) calculado como a **média do erro** no conjunto de **validação** (DEV):
+
+- Erro por amostra: `e_i = y_i - ŷ_i`
+- BIAS: `BIAS = (1/n) * Σ (y_i - ŷ_i)`
+
+A previsão calibrada (com BIAS) é:
+
+- `ŷ_cal_i = ŷ_i + BIAS`
+
+Onde:
+- `y_i` = valor real (fechamento)
+- `ŷ_i` = previsão do modelo (RAW)
+- `n` = número de amostras na validação
 
 **Importante:** o BIAS é estimado **somente na validação (DEV)** e aplicado depois no teste recente, evitando *data leakage*.
 
 ### Resultados (validação DEV)
 O notebook imprime métricas MAE/RMSE/MAPE para:
-- **RAW** (sem calibração)
-- **BIAS** (com calibração)
+- **RAW** (sem calibração) = MAE: 0.7645 | RMSE: 0.9120 | MAPE: 2.1669%
+- **BIAS** (com calibração) =  MAE: 0.4391 | RMSE: 0.5484 | MAPE: 1.2722%
 
 <img width="822" height="367" alt="image" src="https://github.com/user-attachments/assets/34388876-d090-4b01-b057-a50d151414ef" />
 
 ## 8) Teste com Dados Recentes (>= 2025-09-01)
 O período recente é usado como **teste fora da amostra** (holdout).  
 O notebook compara:
-- **LSTM RAW**
-- **LSTM + BIAS**
-- **Baseline Persistência** (amanhã = hoje)
+- **LSTM RAW** = MAE: 0.9318 | RMSE: 0.9999 | MAPE: 2.4418%
+- **LSTM + BIAS** = MAE: 0.3349 | RMSE: 0.4156 | MAPE: 0.8754%
+- **Baseline Persistência** (amanhã = hoje) = MAE: 0.2865 | RMSE: 0.3591 | MAPE: 0.7515%
 
 ### Resultado observado
 No exemplo executado, a correção por BIAS reduziu significativamente o erro no teste recente (RAW → BIAS), evidenciando ganho de performance.
