@@ -1,1 +1,127 @@
-# tech-challlenge-fase-4
+# Contexto do Projeto
+Modelo preditivo de Deep Learning com **Long Short-Term Memory (LSTM)** para prever o **preço de fechamento (Close)** do ativo **ITUB4.SA** a partir de dados históricos do Yahoo Finance.  
+Além do modelo base, foi aplicada uma **correção por BIAS (offset)** (calibração aditiva) para reduzir uma tendência sistemática de sub/superestimação nas previsões.  
+Também foi incluída uma **projeção até 31/12/2026 por cenários**, usando distribuição histórica de **log-retornos** (mais adequada para horizontes longos do que a previsão recursiva determinística).
+
+# Arquitetura do Projeto
+> Neste repositório, o foco implementado é o **desenvolvimento do modelo e avaliação** em notebook.  
+> Os itens de **deploy em API, Docker e monitoramento** ficam como próximos passos para cumprir integralmente o Tech Challenge.
+
+**Fluxo atual (implementado):**
+- **Yahoo Finance (yfinance)**: fonte de dados para preços históricos.
+- **Notebook de Desenvolvimento (LSTM)**: coleta, pré-processamento, normalização, janelamento, treino, validação, teste com dados recentes, correção por BIAS, export de previsões.
+- **Export CSV**: tabela final com previsões calibradas (BIAS) e projeção por cenários até 2026.
+
+**Fluxo alvo (recomendado para fechar os requisitos de deploy):**
+- **API (Flask/FastAPI)** servindo o modelo treinado.
+- **Docker** para empacotamento.
+- **Monitoramento** (logs, latência, uso de recursos).
+
+# Desenvolvimento do Modelo
+O desenvolvimento do modelo foi feito no notebook:
+- `./notebooks/Desenvolvimento_Modelo_ITUB4_final_simples_com_teste_bias_final.ipynb`
+
+## 1) Coleta dos Dados
+Os dados históricos do ativo **ITUB4.SA** são coletados do **Yahoo Finance** via `yfinance` (ou carregados a partir de um CSV previamente gerado com yfinance).  
+O dataset é ordenado por data e utilizado apenas o preço de fechamento (**Close**).
+
+## 2) Exploração dos Dados (EDA)
+Nesta etapa é exibido um gráfico de linha do preço de fechamento e estatísticas descritivas para entender tendência e variabilidade.
+
+## 3) Normalização
+Antes de alimentar o modelo LSTM, os valores de fechamento são normalizados com **MinMaxScaler (0–1)**.  
+Para evitar vazamento de informação, o scaler é ajustado **somente no período de desenvolvimento (DEV)**.
+
+## 4) Preparação dos Dados (Janelamento)
+A série é convertida em sequências com **janela de 60 dias** (window_size = 60):
+- **X**: janela deslizante de 60 fechamentos normalizados
+- **y**: fechamento do próximo dia
+
+## 5) Treino e Validação (até o cutoff)
+Para respeitar o requisito de avaliação em dados não vistos, o notebook separa:
+- **DEV (desenvolvimento)**: dados **antes** do cutoff `2025-09-01` (treino + validação)
+- **RECENTE (teste final)**: dados **a partir** do cutoff `2025-09-01`
+
+No DEV, é aplicado split temporal (ex.: 80/20) para:
+- **Treino**: ajuste dos pesos do modelo
+- **Validação**: avaliação e calibração do BIAS
+
+## 6) Construção do Modelo LSTM
+O modelo utiliza LSTM para capturar padrões temporais na série, com camada(s) recorrente(s) e saída `Dense(1)` para prever um único valor (próximo fechamento).
+
+## 7) Avaliação e Correção por BIAS (offset)
+Além das métricas **RAW** (previsão direta), é aplicada uma **calibração por BIAS** para corrigir um erro sistemático.
+
+### Como o BIAS é calculado
+O BIAS é a média do erro na validação:
+\[
+BIAS = \frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)
+\]
+A previsão calibrada é:
+\[
+\hat{y}^{cal}_i = \hat{y}_i + BIAS
+\]
+
+**Importante:** o BIAS é estimado **somente na validação (DEV)** e aplicado depois no teste recente, evitando *data leakage*.
+
+### Resultados (validação DEV)
+O notebook imprime métricas MAE/RMSE/MAPE para:
+- **RAW** (sem calibração)
+- **BIAS** (com calibração)
+
+![Validação (DEV) - Real vs Previsto](./images/validacao_dev_real_vs_previsto.png)
+
+## 8) Teste com Dados Recentes (>= 2025-09-01)
+O período recente é usado como **teste fora da amostra** (holdout).  
+O notebook compara:
+- **LSTM RAW**
+- **LSTM + BIAS**
+- **Baseline Persistência** (amanhã = hoje)
+
+### Resultado observado
+No exemplo executado, a correção por BIAS reduziu significativamente o erro no teste recente (RAW → BIAS), evidenciando ganho de performance.
+
+![Métricas (console) - RAW vs BIAS vs Baseline](./images/results_console_metrics.png)
+
+![Teste recente - Real vs Previsto](./images/teste_recente_real_vs_previsto.png)
+
+> Observação: mesmo com o ganho do BIAS, o baseline de persistência pode permanecer competitivo para horizontes muito curtos — isso é esperado em séries financeiras.
+
+## 9) Export da Tabela de Previsões (com BIAS)
+O notebook exporta uma tabela final (CSV) contendo **apenas a previsão calibrada**:
+- `predicoes_itub4_bias.csv`
+  - `Date`
+  - `Fechamento_Previsto`
+
+# Projeção até 2026 (cenários)
+Para horizontes longos (meses/anos), uma previsão multi-step determinística com LSTM tende a acumular erro e divergir.  
+Por isso, foi incluída uma projeção até **31/12/2026** baseada em **cenários de log-retornos** (pessimista/mediana/otimista) usando drift (μ) e volatilidade (σ) estimados do histórico.
+
+![Projeção até 2026 (cenários)](./images/projecao_cenarios_2026.png)
+
+Export gerado:
+- `projecao_itub4_cenarios_ate_2026.csv`
+  - `Date`, `Pessimista`, `Mediana`, `Otimista`
+
+# Checklist de Requisitos do Tech Challenge (Fase 4)
+O enunciado pede: coleta/preprocessamento, LSTM, treinamento e avaliação com MAE/RMSE/MAPE, salvamento do modelo, deploy em API, e monitoramento. fileciteturn3file0L16-L56
+
+- [x] Coleta e pré-processamento (Yahoo Finance / yfinance) fileciteturn3file0L22-L33
+- [x] Desenvolvimento do modelo LSTM (treino + ajuste de hiperparâmetros) fileciteturn3file0L34-L39
+- [x] Avaliação com métricas (MAE, RMSE, MAPE) fileciteturn3file0L40-L43
+- [ ] Salvamento e exportação do modelo (ex.: `.keras`/SavedModel + scaler) fileciteturn3file0L44-L47
+- [ ] Deploy do modelo em API (Flask/FastAPI) fileciteturn3file0L48-L52
+- [ ] Monitoramento (tempo de resposta, recursos, logs) fileciteturn3file0L53-L56
+
+**Entregáveis** citados no enunciado incluem código + documentação, scripts/Docker, link de API e vídeo. fileciteturn3file2L24-L30
+
+# Como Executar
+1. Crie um ambiente Python (recomendado: `conda`).
+2. Instale dependências principais:
+   - `pandas`, `numpy`, `matplotlib`, `scikit-learn`, `yfinance`, `tensorflow`
+3. Rode o notebook de desenvolvimento em `./notebooks/`.
+
+# Próximos Passos (para completar o desafio)
+- Salvar `model` + `scaler` (SavedModel/`.keras` + `joblib`/pickle).
+- Criar API (Flask/FastAPI) com endpoint que recebe histórico (últimos 60 fechamentos) e retorna previsão.
+- Empacotar com Docker e adicionar monitoramento (logs e métricas de latência/uso).
