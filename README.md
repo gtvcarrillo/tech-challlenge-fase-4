@@ -28,6 +28,8 @@ O dataset é ordenado por data e utilizado apenas o preço de fechamento (**Clos
 ## 2) Exploração dos Dados (EDA)
 Nesta etapa é exibido um gráfico de linha do preço de fechamento e estatísticas descritivas para entender tendência e variabilidade.
 
+<img width="833" height="387" alt="image" src="https://github.com/user-attachments/assets/40d377f6-25d6-4891-8005-8cb9b110d07e" />
+
 ## 3) Normalização
 Antes de alimentar o modelo LSTM, os valores de fechamento são normalizados com **MinMaxScaler (0–1)**.  
 Para evitar vazamento de informação, o scaler é ajustado **somente no período de desenvolvimento (DEV)**.
@@ -69,7 +71,7 @@ O notebook imprime métricas MAE/RMSE/MAPE para:
 - **RAW** (sem calibração)
 - **BIAS** (com calibração)
 
-![Validação (DEV) - Real vs Previsto](./images/validacao_dev_real_vs_previsto.png)
+<img width="822" height="367" alt="image" src="https://github.com/user-attachments/assets/34388876-d090-4b01-b057-a50d151414ef" />
 
 ## 8) Teste com Dados Recentes (>= 2025-09-01)
 O período recente é usado como **teste fora da amostra** (holdout).  
@@ -81,7 +83,8 @@ O notebook compara:
 ### Resultado observado
 No exemplo executado, a correção por BIAS reduziu significativamente o erro no teste recente (RAW → BIAS), evidenciando ganho de performance.
 
-![Métricas (console) - RAW vs BIAS vs Baseline](./images/results_console_metrics.png)
+<img width="828" height="354" alt="image" src="https://github.com/user-attachments/assets/4c051a9f-5ead-4829-8130-0a982bcaebe4" />
+
 
 ![Teste recente - Real vs Previsto](./images/teste_recente_real_vs_previsto.png)
 
