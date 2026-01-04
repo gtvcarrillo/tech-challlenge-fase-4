@@ -100,12 +100,60 @@ O notebook exporta uma tabela final (CSV) contendo **apenas a previsão calibrad
   - `Date`
   - `Fechamento_Previsto`
 
-# Projeção até 2026 (cenários)
+# 9.1)Projeção até 2026 (cenários)
 Para horizontes longos (meses/anos), uma previsão multi-step determinística com LSTM tende a acumular erro e divergir.  
 Por isso, foi incluída uma projeção até **31/12/2026** baseada em **cenários de log-retornos** (pessimista/mediana/otimista) usando drift (μ) e volatilidade (σ) estimados do histórico.
 
 <img width="828" height="347" alt="image" src="https://github.com/user-attachments/assets/2579690c-95fc-4ae0-bcb3-29b5d2aaa3c6" />
 
+### 9.2)Como os cenários até 31/12/2026 foram calculados (log-retornos)
+
+Para horizontes longos (meses/anos), a previsão recursiva com LSTM (usar a própria previsão como entrada repetidas vezes) tende a acumular erro e “derivar”. Por isso, a projeção até **31/12/2026** foi construída como **cenários estocásticos** baseados no comportamento histórico dos **log-retornos**.
+
+#### 9.2.1) Cálculo do log-retorno diário
+A partir do preço de fechamento `Close_t`, calculamos o **log-retorno**:
+
+- `logret_t = ln(Close_t / Close_{t-1})`
+
+Esse formato é comum em finanças porque:
+- transforma variações multiplicativas em aditivas (facilita simulação);
+- costuma ser mais estável do que o preço bruto para modelagem estatística.
+
+#### 9.2.2) Estimação do drift (μ) e da volatilidade (σ)
+Com a série histórica de log-retornos, estimamos:
+
+- **drift (μ)**: média dos log-retornos diários  
+  - `μ = mean(logret)`
+- **volatilidade (σ)**: desvio padrão dos log-retornos diários  
+  - `σ = std(logret)`
+
+Interpretação:
+- `μ` representa o “crescimento médio diário” observado no histórico;
+- `σ` representa o grau típico de oscilação diária (risco/variabilidade).
+
+#### 9.2.3) Calendário de projeção
+A projeção foi realizada para **dias úteis** usando `bdate_range` (aproximação de pregões; não inclui feriados específicos da B3).
+
+#### 9.2.4) Simulação dos cenários (pessimista / mediana / otimista)
+Para cada dia futuro, simulamos um retorno diário:
+
+- `r_t = μ + σ * ε_t`, onde `ε_t ~ N(0,1)`
+
+Em seguida, reconstruímos o preço acumulando retornos:
+
+- `Close_t = Close_0 * exp( Σ r_k )`
+
+onde `Close_0` é o último fechamento real disponível.
+
+Foram geradas **3 trajetórias independentes** (3 sequências aleatórias), resultando em três curvas:
+- **Pessimista**: trajetória com sequência de retornos menos favorável;
+- **Mediana**: trajetória intermediária;
+- **Otimista**: trajetória com sequência mais favorável.
+
+> Observação: no formato atual, “pessimista/mediana/otimista” são **3 caminhos simulados**, não percentis estatísticos (p10/p50/p90). Para percentis formais, o ideal é simular muitas trajetórias (ex.: 500/1000) e calcular percentis por dia.
+
+#### 9.2.5) Interpretação
+A projeção por cenários **não representa uma previsão pontual garantida**, mas sim uma forma de comunicar **possíveis trajetórias** coerentes com a variabilidade histórica e evidenciar a **incerteza** inerente ao horizonte até 2026.
 
 
 # API
