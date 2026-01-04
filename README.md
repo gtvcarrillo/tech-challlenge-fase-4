@@ -100,7 +100,7 @@ O notebook exporta uma tabela final (CSV) contendo **apenas a previsão calibrad
   - `Date`
   - `Fechamento_Previsto`
 
-# 9.1)Projeção até 2026 (cenários)
+### 9.1)Projeção até 2026 (cenários)
 Para horizontes longos (meses/anos), uma previsão multi-step determinística com LSTM tende a acumular erro e divergir.  
 Por isso, foi incluída uma projeção até **31/12/2026** baseada em **cenários de log-retornos** (pessimista/mediana/otimista) usando drift (μ) e volatilidade (σ) estimados do histórico.
 
