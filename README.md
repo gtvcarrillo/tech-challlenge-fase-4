@@ -84,7 +84,6 @@ O período recente é usado como **teste fora da amostra** (holdout).
 O notebook compara:
 - **LSTM RAW** = MAE: 0.9318 | RMSE: 0.9999 | MAPE: 2.4418%
 - **LSTM + BIAS** = MAE: 0.3349 | RMSE: 0.4156 | MAPE: 0.8754%
-- **Baseline Persistência** (amanhã = hoje) = MAE: 0.2865 | RMSE: 0.3591 | MAPE: 0.7515%
 
 ### Resultado observado
 No exemplo executado, a correção por BIAS reduziu significativamente o erro no teste recente (RAW → BIAS), evidenciando ganho de performance.
@@ -94,7 +93,6 @@ No exemplo executado, a correção por BIAS reduziu significativamente o erro no
 
 ![Teste recente - Real vs Previsto](./images/teste_recente_real_vs_previsto.png)
 
-> Observação: mesmo com o ganho do BIAS, o baseline de persistência pode permanecer competitivo para horizontes muito curtos — isso é esperado em séries financeiras.
 
 ## 9) Export da Tabela de Previsões (com BIAS)
 O notebook exporta uma tabela final (CSV) contendo **apenas a previsão calibrada**:
@@ -109,11 +107,12 @@ Por isso, foi incluída uma projeção até **31/12/2026** baseada em **cenário
 <img width="828" height="347" alt="image" src="https://github.com/user-attachments/assets/2579690c-95fc-4ae0-bcb3-29b5d2aaa3c6" />
 
 
-Export gerado:
-- `projecao_itub4_cenarios_ate_2026.csv`
-  - `Date`, `Pessimista`, `Mediana`, `Otimista`
 
-# Checklist de Requisitos do Tech Challenge (Fase 4)
+# API
+
+ALTERAR
+
+
 O enunciado pede: coleta/preprocessamento, LSTM, treinamento e avaliação com MAE/RMSE/MAPE, salvamento do modelo, deploy em API, e monitoramento. fileciteturn3file0L16-L56
 
 - [x] Coleta e pré-processamento (Yahoo Finance / yfinance) fileciteturn3file0L22-L33
